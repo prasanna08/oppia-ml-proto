@@ -86,6 +86,8 @@ _MESSAGE_TYPE_FAILED = 'FAILED'
 
 EXCLUDED_PATHS = ('third_party/*',)
 
+PROTOTOOL_CONFIG_FILE = 'prototool_config.json'
+
 def _get_changed_filenames():
     """Returns a list of modified files (both staged and unstaged)
 
@@ -121,7 +123,7 @@ def _get_all_files_in_directory(dir_path):
     return files_in_directory
 
 
-def _lint_proto_files(files_to_lint, result):
+def _lint_proto_files(files_to_lint, result, config):
     """Prints a list of lint errors in the given list of Proto files.
 
     Args:
@@ -145,8 +147,8 @@ def _lint_proto_files(files_to_lint, result):
     for proto_file in files_to_lint:
         print('Linting %s' % proto_file)
         try:
-            subprocess.check_output(
-                [_PROTOTOOL_PATH, 'lint', proto_file])
+            subprocess.check_output([
+                _PROTOTOOL_PATH, 'lint', proto_file, '--config-data', config])
         except subprocess.CalledProcessError as e:
             print(e.output)
             are_there_errors = True
@@ -200,6 +202,15 @@ def _get_all_files():
 def _pre_commit_linter(all_files):
     print 'Starting linter...'
 
+    if not os.path.isfile(PROTOTOOL_CONFIG_FILE):
+        print 'Could not locate config file. Exiting.' % PROTOTOOL_CONFIG_FILE
+        print '----------------------------------------'
+        sys.exit(1)
+
+    f = open(PROTOTOOL_CONFIG_FILE, 'r')
+    prototool_config = f.read()
+    f.close()
+
     proto_files_to_lint = [
         filename for filename in all_files if filename.endswith('.proto')]
 
@@ -208,7 +219,7 @@ def _pre_commit_linter(all_files):
     proto_result = multiprocessing.Queue()
     proto_linting_processes.append(multiprocessing.Process(
         target=_lint_proto_files,
-        args=(proto_files_to_lint, proto_result)))
+        args=(proto_files_to_lint, proto_result, prototool_config)))
 
     print 'Starting Proto Linting'
     print '----------------------------------------'
