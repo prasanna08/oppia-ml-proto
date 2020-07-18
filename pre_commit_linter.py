@@ -110,7 +110,8 @@ def _get_all_files_in_directory(dir_path):
         dir_path: str. Path to the folder to be linted.
 
     Returns:
-        a list of files in directory and subdirectories without excluded files.
+        List(str). a list of files in directory and subdirectories without
+        excluded files.
     """
     files_in_directory = []
     for _dir, _, files in os.walk(dir_path):
