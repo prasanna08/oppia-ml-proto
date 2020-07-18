@@ -35,9 +35,9 @@ def download_file(source_url, target_dir, filename):
     File is downloaded only if it does not already exist.
 
     Args:
-      source_url: the URL of the file.
-      target_dir: the directory to save the file to.
-      filename: Name of the output file.
+        source_url: str. The URL of the file.
+        target_dir: str. The directory to save the file to.
+        filename: str. Name of the output file.
     """
     os.makedirs(target_dir)
     print('Downloading file %s to %s ...' % (filename, target_dir))

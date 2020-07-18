@@ -26,7 +26,7 @@ IMPORTANT NOTES:
 1.  Before running this script, you must install third-party dependencies by
     running
 
-        bash install_prototool.sh
+        python install_prototool.py
 
     at least once.
 
@@ -88,10 +88,10 @@ EXCLUDED_PATHS = ('third_party/*',)
 PROTOTOOL_CONFIG_FILE = 'prototool_config.json'
 
 def _get_changed_filenames():
-    """Returns a list of modified files (both staged and unstaged)
+    """Returns a list of modified files (both staged and unstaged).
 
     Returns:
-        a list of filenames of modified files.
+        List(str). A list of filenames of modified files.
     """
     unstaged_files = subprocess.check_output([
         'git', 'diff', '--name-only',
@@ -129,8 +129,7 @@ def _lint_proto_files(files_to_lint, result, config):
         files_to_lint: list(str). A list of filepaths to lint.
         result: multiprocessing.Queue. A queue to put results of test.
     """
-    start_time = time.time()
-    are_there_errors = False
+    errors_exist = False
 
     num_proto_files = len(files_to_lint)
     if not files_to_lint:
@@ -143,6 +142,8 @@ def _lint_proto_files(files_to_lint, result, config):
     _BATCH_SIZE = 50
     current_batch_start_index = 0
 
+    start_time = time.time()
+
     for proto_file in files_to_lint:
         print('Linting %s' % proto_file)
         try:
@@ -150,9 +151,9 @@ def _lint_proto_files(files_to_lint, result, config):
                 _PROTOTOOL_PATH, 'lint', proto_file, '--config-data', config])
         except subprocess.CalledProcessError as e:
             print(e.output)
-            are_there_errors = True
+            errors_exist = True
 
-    if are_there_errors:
+    if errors_exist:
         result.put('%s    Proto linting failed' % _MESSAGE_TYPE_FAILED)
     else:
         result.put('%s   %s Proto files linted (%.1f secs)' % (
@@ -161,7 +162,7 @@ def _lint_proto_files(files_to_lint, result, config):
     print('Proto linting finished.')
 
 def _get_all_files():
-    """This function is used to check if this script is ran from
+    """This function is used to check if this script is run from
     root directory and to return a list of all the files for linting and
     pattern checks.
     """
@@ -186,8 +187,9 @@ def _get_all_files():
             else:
                 invalid_filepaths.append(f)
         if invalid_filepaths:
-            print('The following file(s) do not exist: %s\n'
-                  'Exiting.' % invalid_filepaths)
+            print(
+                'The following file(s) do not exist: %s\n'
+                'Exiting.' % invalid_filepaths)
             sys.exit(1)
         all_files = valid_filepaths
     else:
